@@ -16,7 +16,7 @@ export const productUpdateSchema = productSchema.partial()
 export const movementSchema = z.object({
   productId: z.string().uuid('ID de producto inválido'),
   type: z.enum(['IN', 'OUT'], {
-    errorMap: () => ({ message: 'El tipo debe ser IN o OUT' }),
+    message: 'El tipo debe ser IN o OUT',
   }),
   crates: z.number().int().positive('Las rejas deben ser un número entero positivo'),
   timestamp: z.string().datetime('Fecha inválida'),

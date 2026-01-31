@@ -100,7 +100,7 @@ export default function ReportChart({ report }: ReportChartProps) {
                 cy="50%"
                 labelLine={false}
                 label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
+                  `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`
                 }
                 outerRadius={100}
                 fill="#8884d8"
@@ -114,7 +114,7 @@ export default function ReportChart({ report }: ReportChartProps) {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: number) => formatCurrency(value)}
+                formatter={(value: number | undefined) => formatCurrency(value ?? 0)}
                 contentStyle={{
                   backgroundColor: 'rgb(250 250 250)',
                   border: '1px solid rgb(229 231 235)',
@@ -146,7 +146,7 @@ export default function ReportChart({ report }: ReportChartProps) {
               tickFormatter={(value) => `$${value.toLocaleString()}`}
             />
             <Tooltip
-              formatter={(value: number) => formatCurrency(value)}
+              formatter={(value: number | undefined) => formatCurrency(value ?? 0)}
               contentStyle={{
                 backgroundColor: 'rgb(250 250 250)',
                 border: '1px solid rgb(229 231 235)',
