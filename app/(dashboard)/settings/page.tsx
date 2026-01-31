@@ -121,23 +121,23 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+    <div className="space-y-6 min-w-0">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+        <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50 min-w-0 truncate">
           Configuración de Productos
         </h1>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 shrink-0">
           {!showCreateForm && !editingProduct && (
             <button
               onClick={() => setShowCreateForm(true)}
-              className="bg-zinc-900 dark:bg-zinc-50 text-white dark:text-black font-semibold py-2 px-4 rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
+              className="bg-zinc-900 dark:bg-zinc-50 text-white dark:text-black font-semibold py-2 px-4 rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors text-sm sm:text-base w-full sm:w-auto"
             >
               Crear Producto
             </button>
           )}
           <button
             onClick={() => router.push('/')}
-            className="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            className="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-sm sm:text-base w-full sm:w-auto"
           >
             Volver al Dashboard
           </button>

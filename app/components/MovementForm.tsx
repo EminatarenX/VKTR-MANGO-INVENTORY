@@ -249,11 +249,11 @@ export default function MovementForm({
         )
       })()}
 
-      <div className="flex gap-4">
+      <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-4">
         <button
           type="submit"
           disabled={loading}
-          className="flex-1 bg-zinc-900 dark:bg-zinc-50 text-white dark:text-black font-semibold py-2 px-4 rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 min-w-0 bg-zinc-900 dark:bg-zinc-50 text-white dark:text-black font-semibold py-2 px-4 rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
         >
           {loading ? 'Registrando...' : type === 'IN' ? 'Registrar Entrada' : 'Registrar Salida'}
         </button>
@@ -261,7 +261,7 @@ export default function MovementForm({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            className="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-sm sm:text-base shrink-0"
           >
             Cancelar
           </button>

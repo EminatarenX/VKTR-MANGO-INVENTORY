@@ -16,9 +16,12 @@ export interface Product {
 
 export async function getAllProducts(): Promise<Product[]> {
   const supabase = await getSupabaseClient()
+  const userId = await getCurrentUserId()
+
   const { data, error } = await supabase
     .from('products')
     .select('*')
+    .eq('user_id', userId)
     .order('name')
 
   if (error) {
@@ -30,10 +33,13 @@ export async function getAllProducts(): Promise<Product[]> {
 
 export async function getProductById(id: string): Promise<Product | null> {
   const supabase = await getSupabaseClient()
+  const userId = await getCurrentUserId()
+
   const { data, error } = await supabase
     .from('products')
     .select('*')
     .eq('id', id)
+    .eq('user_id', userId)
     .single()
 
   if (error) {
@@ -79,6 +85,8 @@ export async function updateProduct(
   input: ProductUpdateInput
 ): Promise<Product> {
   const supabase = await getSupabaseClient()
+  const userId = await getCurrentUserId()
+
   const { data, error } = await supabase
     .from('products')
     .update({
@@ -86,6 +94,7 @@ export async function updateProduct(
       updatedAt: new Date().toISOString(),
     })
     .eq('id', id)
+    .eq('user_id', userId)
     .select()
     .single()
 
@@ -104,7 +113,12 @@ export async function updateProduct(
 
 export async function deleteProduct(id: string): Promise<void> {
   const supabase = await getSupabaseClient()
-  const { error } = await supabase.from('products').delete().eq('id', id)
+  const userId = await getCurrentUserId()
+  const { error } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId)
 
   if (error) {
     throw new Error(`Error al eliminar producto: ${error.message}`)

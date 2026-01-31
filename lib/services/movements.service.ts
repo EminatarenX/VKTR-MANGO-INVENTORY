@@ -111,16 +111,18 @@ export async function createMovement(
 }
 
 /**
- * Get movements with optional filters
+ * Get movements with optional filters (solo del usuario actual)
  */
 export async function getMovements(
   filters: MovementFilters = {}
 ): Promise<InventoryMovement[]> {
   const supabase = await getSupabaseClient()
+  const userId = await getCurrentUserId()
 
   let query = supabase
     .from('inventory_movements')
     .select('*')
+    .eq('user_id', userId)
     .order('timestamp', { ascending: false })
     .order('createdAt', { ascending: false })
 
@@ -158,4 +160,22 @@ export async function getMovementsByProduct(
   to?: string
 ): Promise<InventoryMovement[]> {
   return getMovements({ productId, from, to })
+}
+
+/**
+ * Delete a movement by id (solo si pertenece al usuario actual)
+ */
+export async function deleteMovement(id: string): Promise<void> {
+  const supabase = await getSupabaseClient()
+  const userId = await getCurrentUserId()
+
+  const { error } = await supabase
+    .from('inventory_movements')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId)
+
+  if (error) {
+    throw new Error(`Error al eliminar movimiento: ${error.message}`)
+  }
 }

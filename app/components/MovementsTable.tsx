@@ -19,6 +19,7 @@ interface MovementsTableProps {
     from?: string
     to?: string
   }) => void
+  onMovementDeleted?: () => void
 }
 
 export default function MovementsTable({
@@ -26,7 +27,33 @@ export default function MovementsTable({
   products,
   filters,
   onFilterChange,
+  onMovementDeleted,
 }: MovementsTableProps) {
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const handleDelete = async (movement: InventoryMovement) => {
+    if (
+      !confirm(
+        `¿Eliminar este movimiento de ${movement.crates} rejas (${movement.type === 'IN' ? 'entrada' : 'salida'})? Esta acción no se puede deshacer.`
+      )
+    ) {
+      return
+    }
+    setDeletingId(movement.id)
+    try {
+      const res = await fetch(`/api/movements/${movement.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Error al eliminar')
+      }
+      onMovementDeleted?.()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al eliminar movimiento')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
@@ -159,12 +186,15 @@ export default function MovementsTable({
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                   Nota
                 </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-zinc-900 divide-y divide-zinc-200 dark:divide-zinc-800">
               {movements.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-6 py-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                  <td colSpan={11} className="px-6 py-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
                     No hay movimientos registrados
                   </td>
                 </tr>
@@ -213,6 +243,17 @@ export default function MovementsTable({
                     </td>
                     <td className="px-6 py-4 text-sm text-zinc-700 dark:text-zinc-300">
                       {movement.note || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(movement)}
+                        disabled={deletingId === movement.id}
+                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                        title="Eliminar movimiento"
+                      >
+                        {deletingId === movement.id ? 'Eliminando...' : 'Eliminar'}
+                      </button>
                     </td>
                   </tr>
                 ))
