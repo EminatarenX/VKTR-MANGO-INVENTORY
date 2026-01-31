@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '../supabase/db'
+import { getCurrentUserId } from '../supabase/auth'
 import type { ProductInput, ProductUpdateInput } from '../validators'
 
 export interface Product {
@@ -47,9 +48,12 @@ export async function getProductById(id: string): Promise<Product | null> {
 
 export async function createProduct(input: ProductInput): Promise<Product> {
   const supabase = await getSupabaseClient()
+  const userId = await getCurrentUserId()
+
   const { data, error } = await supabase
     .from('products')
     .insert({
+      user_id: userId,
       name: input.name,
       avgKgPerCrate: input.avgKgPerCrate,
       minKgPerCrate: input.minKgPerCrate ?? null,

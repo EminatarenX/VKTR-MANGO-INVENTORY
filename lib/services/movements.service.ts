@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '../supabase/db'
+import { getCurrentUserId } from '../supabase/auth'
 import { getCurrentInventory } from './inventory.service'
 import { getProductById } from './products.service'
 import type { MovementInput } from '../validators'
@@ -79,9 +80,12 @@ export async function createMovement(
       : currentInventory - input.crates
 
   // Insert movement
+  const userId = await getCurrentUserId()
+
   const { data, error } = await supabase
     .from('inventory_movements')
     .insert({
+      user_id: userId,
       productId: input.productId,
       type: input.type,
       crates: input.crates,
