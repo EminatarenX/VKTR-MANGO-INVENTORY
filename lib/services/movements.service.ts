@@ -27,6 +27,8 @@ export interface MovementFilters {
   from?: string
   to?: string
   type?: 'IN' | 'OUT'
+  page?: number
+  pageSize?: number
 }
 
 /**
@@ -119,12 +121,18 @@ export async function getMovements(
   const supabase = await getSupabaseClient()
   const userId = await getCurrentUserId()
 
+  const page = filters.page ?? 1
+  const pageSize = filters.pageSize ?? 50
+  const rangeFrom = (page - 1) * pageSize
+  const rangeTo = rangeFrom + pageSize - 1
+
   let query = supabase
     .from('inventory_movements')
-    .select('*')
+    .select('*', { count: 'exact' })
     .eq('user_id', userId)
     .order('timestamp', { ascending: false })
     .order('createdAt', { ascending: false })
+    .range(rangeFrom, rangeTo)
 
   if (filters.productId) {
     query = query.eq('productId', filters.productId)
@@ -149,6 +157,65 @@ export async function getMovements(
   }
 
   return data || []
+}
+
+export interface MovementsPage {
+  items: InventoryMovement[]
+  page: number
+  pageSize: number
+  total: number | null
+}
+
+/**
+ * Igual que getMovements, pero regresa metadatos de paginación.
+ */
+export async function getMovementsPage(
+  filters: MovementFilters = {}
+): Promise<MovementsPage> {
+  const supabase = await getSupabaseClient()
+  const userId = await getCurrentUserId()
+
+  const page = filters.page ?? 1
+  const pageSize = filters.pageSize ?? 50
+  const rangeFrom = (page - 1) * pageSize
+  const rangeTo = rangeFrom + pageSize - 1
+
+  let query = supabase
+    .from('inventory_movements')
+    .select('*', { count: 'exact' })
+    .eq('user_id', userId)
+    .order('timestamp', { ascending: false })
+    .order('createdAt', { ascending: false })
+    .range(rangeFrom, rangeTo)
+
+  if (filters.productId) {
+    query = query.eq('productId', filters.productId)
+  }
+
+  if (filters.type) {
+    query = query.eq('type', filters.type)
+  }
+
+  if (filters.from) {
+    query = query.gte('timestamp', filters.from)
+  }
+
+  if (filters.to) {
+    query = query.lte('timestamp', filters.to)
+  }
+
+  const { data, error, count } = await query
+
+  if (error) {
+    throw new Error(`Error al obtener movimientos: ${error.message}`)
+  }
+
+  return {
+    items: data || [],
+    page,
+    pageSize,
+    total: typeof count === 'number' ? count : null,
+  }
 }
 
 /**

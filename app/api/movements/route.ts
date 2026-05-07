@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createMovement, getMovements } from '@/lib/services/movements.service'
+import { createMovement, getMovementsPage } from '@/lib/services/movements.service'
 import { movementSchema, movementFiltersSchema } from '@/lib/validators'
 
 export async function POST(request: NextRequest) {
@@ -30,12 +30,14 @@ export async function GET(request: NextRequest) {
       from: searchParams.get('from') || undefined,
       to: searchParams.get('to') || undefined,
       type: (searchParams.get('type') as 'IN' | 'OUT') || undefined,
+      page: searchParams.get('page') || undefined,
+      pageSize: searchParams.get('pageSize') || undefined,
     }
 
     // Validate filters
     const validatedFilters = movementFiltersSchema.parse(filters)
-    const movements = await getMovements(validatedFilters)
-    return NextResponse.json(movements)
+    const movementsPage = await getMovementsPage(validatedFilters)
+    return NextResponse.json(movementsPage)
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       return NextResponse.json(

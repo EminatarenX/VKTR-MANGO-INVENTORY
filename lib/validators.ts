@@ -29,6 +29,8 @@ export const movementFiltersSchema = z.object({
   from: z.string().optional(),
   to: z.string().optional(),
   type: z.enum(['IN', 'OUT']).optional(),
+  page: z.coerce.number().int().min(1).optional(),
+  pageSize: z.coerce.number().int().min(1).max(200).optional(),
 })
 
 // Report filters schema

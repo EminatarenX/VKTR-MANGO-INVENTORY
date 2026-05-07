@@ -11,6 +11,9 @@ export default function MovementsPage() {
   const [movements, setMovements] = useState<InventoryMovement[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(50)
+  const [total, setTotal] = useState<number | null>(null)
   const [filters, setFilters] = useState<{
     productId?: string
     type?: 'IN' | 'OUT'
@@ -20,7 +23,12 @@ export default function MovementsPage() {
 
   useEffect(() => {
     loadData()
-  }, [filters])
+  }, [filters, page, pageSize])
+
+  useEffect(() => {
+    // al cambiar filtros, regresamos a la primera página
+    setPage(1)
+  }, [filters.productId, filters.type, filters.from, filters.to])
 
   const loadData = async () => {
     setLoading(true)
@@ -38,11 +46,14 @@ export default function MovementsPage() {
       if (filters.type) params.append('type', filters.type)
       if (filters.from) params.append('from', filters.from)
       if (filters.to) params.append('to', filters.to)
+      params.append('page', String(page))
+      params.append('pageSize', String(pageSize))
 
       const movementsRes = await fetch(`/api/movements?${params.toString()}`)
       if (movementsRes.ok) {
         const movementsData = await movementsRes.json()
-        setMovements(movementsData)
+        setMovements(movementsData.items || [])
+        setTotal(typeof movementsData.total === 'number' ? movementsData.total : null)
       }
     } catch (error) {
       console.error('Error loading data:', error)
@@ -76,6 +87,11 @@ export default function MovementsPage() {
           filters={filters}
           onFilterChange={setFilters}
           onMovementDeleted={loadData}
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
         />
       )}
     </div>

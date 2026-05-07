@@ -20,6 +20,11 @@ interface MovementsTableProps {
     to?: string
   }) => void
   onMovementDeleted?: () => void
+  page: number
+  pageSize: number
+  total: number | null
+  onPageChange: (page: number) => void
+  onPageSizeChange: (pageSize: number) => void
 }
 
 export default function MovementsTable({
@@ -28,6 +33,11 @@ export default function MovementsTable({
   filters,
   onFilterChange,
   onMovementDeleted,
+  page,
+  pageSize,
+  total,
+  onPageChange,
+  onPageSizeChange,
 }: MovementsTableProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
@@ -74,6 +84,9 @@ export default function MovementsTable({
   const getProductName = (productId: string) => {
     return products.find((p) => p.id === productId)?.name || 'Desconocido'
   }
+
+  const totalPages =
+    typeof total === 'number' ? Math.max(1, Math.ceil(total / pageSize)) : null
 
   return (
     <div className="space-y-4">
@@ -260,6 +273,68 @@ export default function MovementsTable({
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+        <div className="text-sm text-zinc-600 dark:text-zinc-400">
+          {typeof total === 'number' ? (
+            <>
+              Mostrando página <span className="font-medium">{page}</span>
+              {totalPages ? (
+                <>
+                  {' '}
+                  de <span className="font-medium">{totalPages}</span> ({total}{' '}
+                  movimientos)
+                </>
+              ) : null}
+            </>
+          ) : (
+            <>Mostrando página <span className="font-medium">{page}</span></>
+          )}
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-zinc-600 dark:text-zinc-400">
+              Por página
+            </label>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                onPageSizeChange(Number(e.target.value))
+                onPageChange(1)
+              }}
+              className="px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:bg-zinc-800 dark:text-zinc-50 text-sm"
+            >
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+
+          <div className="flex gap-2 justify-end">
+            <button
+              type="button"
+              onClick={() => onPageChange(Math.max(1, page - 1))}
+              disabled={page <= 1}
+              className="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              onClick={() => onPageChange(page + 1)}
+              disabled={
+                (typeof total === 'number' && totalPages !== null && page >= totalPages) ||
+                movements.length < pageSize
+              }
+              className="px-4 py-2 bg-zinc-900 dark:bg-zinc-50 text-white dark:text-black rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              Siguiente
+            </button>
+          </div>
         </div>
       </div>
     </div>
