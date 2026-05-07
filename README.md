@@ -19,6 +19,52 @@ Nota:
 - Para UX simple, guarda un solo valor `avgKgPerCrate`.
 - Opcional (mejor exactitud): guardar `minKgPerCrate` y `maxKgPerCrate` además del promedio.
 
+## Seed (poblar datos)
+La app **no crea** productos automáticamente. Puedes:
+- Crearlos en UI: `Configuración (/settings) → Crear Producto`
+- O poblarlos con scripts (útil para ambientes nuevos)
+
+### Requisitos para scripts
+Estos scripts usan la **Service Role Key** (solo para correr localmente).
+
+Variables de entorno requeridas:
+- `SUPABASE_URL`: URL del proyecto (ej. `https://xxxx.supabase.co`)
+- `SUPABASE_SERVICE_ROLE_KEY`: clave **service_role** (NO exponer en frontend)
+- `SEED_USER_ID`: el `auth.users.id` del usuario dueño de los datos
+
+> Tip: en Supabase Dashboard puedes ver el `User UID` en `Authentication → Users`.
+
+### Seed 1: crear productos (Ataulfo/Oro/Tommy)
+Opcionales:
+- `SEED_BUY_PRICE` (default 50)
+- `SEED_SELL_PRICE` (default 52)
+
+Ejecutar:
+
+```bash
+SUPABASE_URL="..." \
+SUPABASE_SERVICE_ROLE_KEY="..." \
+SEED_USER_ID="..." \
+npm run seed:products
+```
+
+### Seed 2: crear movimientos semanales últimos 6 meses
+Inserta movimientos IN/OUT **semanales** para cada producto del usuario, cuidando no dejar inventario negativo.
+
+Opcionales:
+- `SEED_WEEKS` (default 26)
+- `SEED_MAX_WEEKLY_IN` (default 60)
+- `SEED_MAX_WEEKLY_OUT` (default 55)
+
+Ejecutar:
+
+```bash
+SUPABASE_URL="..." \
+SUPABASE_SERVICE_ROLE_KEY="..." \
+SEED_USER_ID="..." \
+npm run seed:weekly
+```
+
 ## Alcance MVP
 1) Catálogo de productos (tipos de mango):
 - nombre (Ataulfo/Oro/Tommy)

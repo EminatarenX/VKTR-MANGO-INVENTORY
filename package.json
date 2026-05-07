@@ -6,7 +6,9 @@
     "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:products": "node scripts/seed-products.mjs",
+    "seed:weekly": "node scripts/seed-weekly-movements.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
