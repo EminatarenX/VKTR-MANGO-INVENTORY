@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '../supabase/db'
-import { getCurrentUserId } from '../supabase/auth'
+import { getCurrentCompanyId, getCurrentUserId } from '../supabase/auth'
 import type { ProductInput, ProductUpdateInput } from '../validators'
 
 export interface Product {
@@ -16,12 +16,12 @@ export interface Product {
 
 export async function getAllProducts(): Promise<Product[]> {
   const supabase = await getSupabaseClient()
-  const userId = await getCurrentUserId()
+  const companyId = await getCurrentCompanyId()
 
   const { data, error } = await supabase
     .from('products')
     .select('*')
-    .eq('user_id', userId)
+    .eq('company_id', companyId)
     .order('name')
 
   if (error) {
@@ -33,13 +33,13 @@ export async function getAllProducts(): Promise<Product[]> {
 
 export async function getProductById(id: string): Promise<Product | null> {
   const supabase = await getSupabaseClient()
-  const userId = await getCurrentUserId()
+  const companyId = await getCurrentCompanyId()
 
   const { data, error } = await supabase
     .from('products')
     .select('*')
     .eq('id', id)
-    .eq('user_id', userId)
+    .eq('company_id', companyId)
     .single()
 
   if (error) {
@@ -54,11 +54,13 @@ export async function getProductById(id: string): Promise<Product | null> {
 
 export async function createProduct(input: ProductInput): Promise<Product> {
   const supabase = await getSupabaseClient()
+  const companyId = await getCurrentCompanyId()
   const userId = await getCurrentUserId()
 
   const { data, error } = await supabase
     .from('products')
     .insert({
+      company_id: companyId,
       user_id: userId,
       name: input.name,
       avgKgPerCrate: input.avgKgPerCrate,
@@ -85,7 +87,7 @@ export async function updateProduct(
   input: ProductUpdateInput
 ): Promise<Product> {
   const supabase = await getSupabaseClient()
-  const userId = await getCurrentUserId()
+  const companyId = await getCurrentCompanyId()
 
   const { data, error } = await supabase
     .from('products')
@@ -94,7 +96,7 @@ export async function updateProduct(
       updatedAt: new Date().toISOString(),
     })
     .eq('id', id)
-    .eq('user_id', userId)
+    .eq('company_id', companyId)
     .select()
     .single()
 
@@ -113,12 +115,12 @@ export async function updateProduct(
 
 export async function deleteProduct(id: string): Promise<void> {
   const supabase = await getSupabaseClient()
-  const userId = await getCurrentUserId()
+  const companyId = await getCurrentCompanyId()
   const { error } = await supabase
     .from('products')
     .delete()
     .eq('id', id)
-    .eq('user_id', userId)
+    .eq('company_id', companyId)
 
   if (error) {
     throw new Error(`Error al eliminar producto: ${error.message}`)

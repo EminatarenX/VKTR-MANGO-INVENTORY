@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '../supabase/db'
-import { getCurrentUserId } from '../supabase/auth'
+import { getCurrentCompanyId } from '../supabase/auth'
 import { getMovements } from './movements.service'
 
 export interface ProductReport {
@@ -39,13 +39,13 @@ export async function getReportSummary(
   productId?: string
 ): Promise<ReportSummary> {
   const supabase = await getSupabaseClient()
-  const userId = await getCurrentUserId()
+  const companyId = await getCurrentCompanyId()
 
-  // Get all products del usuario (or specific one)
+  // Get all products de la empresa (or specific one)
   let productsQuery = supabase
     .from('products')
     .select('id, name')
-    .eq('user_id', userId)
+    .eq('company_id', companyId)
   if (productId) {
     productsQuery = productsQuery.eq('id', productId)
   }

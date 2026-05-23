@@ -19,6 +19,32 @@ Nota:
 - Para UX simple, guarda un solo valor `avgKgPerCrate`.
 - Opcional (mejor exactitud): guardar `minKgPerCrate` y `maxKgPerCrate` además del promedio.
 
+## Multi-tenancy (empresas)
+El proyecto soporta que **varios usuarios compartan el mismo inventario** mediante el concepto de **empresa (company)**.
+
+Tablas:
+- `companies`: una fila por empresa.
+- `user_profiles (user_id, company_id)`: mapeo 1:1 que asigna cada usuario a una empresa.
+- `products` y `inventory_movements`: tienen `company_id` (scope de visibilidad) y `user_id` (auditoría: quién creó la fila).
+
+RLS: todas las queries filtran por `company_id` resuelto desde `user_profiles` mediante la función `public.current_company_id()`.
+
+### Migración inicial
+La SQL necesaria está en [`db/migrations/0001_multi_tenancy_company.sql`](db/migrations/0001_multi_tenancy_company.sql).
+Ejecutar en **Supabase Dashboard → SQL Editor** bloque por bloque.
+
+### Agregar un nuevo usuario a una empresa existente
+1. En Supabase Dashboard: **Authentication → Users → Add user** (email + password).
+2. Copia el `User UID` recién creado.
+3. En SQL Editor:
+
+```sql
+insert into public.user_profiles (user_id, company_id)
+values ('<NUEVO_USER_UID>', '<COMPANY_UUID>');
+```
+
+Listo: ese usuario ya verá los mismos productos y movimientos de la empresa.
+
 ## Seed (poblar datos)
 La app **no crea** productos automáticamente. Puedes:
 - Crearlos en UI: `Configuración (/settings) → Crear Producto`
@@ -30,9 +56,12 @@ Estos scripts usan la **Service Role Key** (solo para correr localmente).
 Variables de entorno requeridas:
 - `SUPABASE_URL`: URL del proyecto (ej. `https://xxxx.supabase.co`)
 - `SUPABASE_SERVICE_ROLE_KEY`: clave **service_role** (NO exponer en frontend)
-- `SEED_USER_ID`: el `auth.users.id` del usuario dueño de los datos
+- `SEED_COMPANY_ID`: el `companies.id` al que pertenecerán los datos
 
-> Tip: en Supabase Dashboard puedes ver el `User UID` en `Authentication → Users`.
+Opcionales:
+- `SEED_USER_ID`: si se pasa, queda como `created_by` en cada fila (auditoría).
+
+> Tip: en Supabase Dashboard puedes ver el `User UID` en `Authentication → Users` y el `company_id` en `Table Editor → companies`.
 
 ### Seed 1: crear productos (Ataulfo/Oro/Tommy)
 Opcionales:
@@ -44,12 +73,13 @@ Ejecutar:
 ```bash
 SUPABASE_URL="..." \
 SUPABASE_SERVICE_ROLE_KEY="..." \
+SEED_COMPANY_ID="..." \
 SEED_USER_ID="..." \
 npm run seed:products
 ```
 
 ### Seed 2: crear movimientos semanales últimos 6 meses
-Inserta movimientos IN/OUT **semanales** para cada producto del usuario, cuidando no dejar inventario negativo.
+Inserta movimientos IN/OUT **semanales** para cada producto de la empresa, cuidando no dejar inventario negativo.
 
 Opcionales:
 - `SEED_WEEKS` (default 26)
@@ -61,6 +91,7 @@ Ejecutar:
 ```bash
 SUPABASE_URL="..." \
 SUPABASE_SERVICE_ROLE_KEY="..." \
+SEED_COMPANY_ID="..." \
 SEED_USER_ID="..." \
 npm run seed:weekly
 ```

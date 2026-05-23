@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '../supabase/db'
-import { getCurrentUserId } from '../supabase/auth'
+import { getCurrentCompanyId } from '../supabase/auth'
 
 export interface InventoryItem {
   productId: string
@@ -19,18 +19,18 @@ export interface InventorySummary {
 }
 
 /**
- * Get current inventory for a specific product (solo movimientos del usuario actual)
+ * Get current inventory for a specific product (solo movimientos de la empresa actual)
  * Returns the last inventoryAfter value or 0 if no movements exist
  */
 export async function getCurrentInventory(productId: string): Promise<number> {
   const supabase = await getSupabaseClient()
-  const userId = await getCurrentUserId()
+  const companyId = await getCurrentCompanyId()
 
   const { data, error } = await supabase
     .from('inventory_movements')
     .select('inventoryAfter')
     .eq('productId', productId)
-    .eq('user_id', userId)
+    .eq('company_id', companyId)
     .order('timestamp', { ascending: false })
     .order('createdAt', { ascending: false })
     .limit(1)
@@ -47,17 +47,17 @@ export async function getCurrentInventory(productId: string): Promise<number> {
 }
 
 /**
- * Get inventory summary for all products (solo del usuario actual)
+ * Get inventory summary for all products (solo de la empresa actual)
  */
 export async function getInventorySummary(): Promise<InventorySummary> {
   const supabase = await getSupabaseClient()
-  const userId = await getCurrentUserId()
+  const companyId = await getCurrentCompanyId()
 
-  // Get all products del usuario
+  // Get all products de la empresa
   const { data: products, error: productsError } = await supabase
     .from('products')
     .select('id, name, "buyPricePerCrate"')
-    .eq('user_id', userId)
+    .eq('company_id', companyId)
     .order('name')
 
   if (productsError) {

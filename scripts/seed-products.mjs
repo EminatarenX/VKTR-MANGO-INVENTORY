@@ -16,7 +16,9 @@ function toNumber(v, fallback) {
 async function main() {
   const url = requireEnv('SUPABASE_URL')
   const serviceRoleKey = requireEnv('SUPABASE_SERVICE_ROLE_KEY')
-  const userId = requireEnv('SEED_USER_ID')
+  const companyId = requireEnv('SEED_COMPANY_ID')
+  // Opcional: si se pasa, queda como created_by en cada producto.
+  const userId = process.env.SEED_USER_ID || null
 
   const buy = toNumber(process.env.SEED_BUY_PRICE, 50)
   const sell = toNumber(process.env.SEED_SELL_PRICE, 52)
@@ -27,6 +29,7 @@ async function main() {
 
   const products = [
     {
+      company_id: companyId,
       user_id: userId,
       name: 'Ataulfo',
       avgKgPerCrate: 33,
@@ -36,6 +39,7 @@ async function main() {
       sellPricePerCrate: sell,
     },
     {
+      company_id: companyId,
       user_id: userId,
       name: 'Oro',
       avgKgPerCrate: 32,
@@ -45,6 +49,7 @@ async function main() {
       sellPricePerCrate: sell,
     },
     {
+      company_id: companyId,
       user_id: userId,
       name: 'Tommy',
       avgKgPerCrate: 30,
@@ -55,31 +60,28 @@ async function main() {
     },
   ]
 
-  // idempotente: si ya existe (user_id, name), lo omitimos
+  // idempotente: si ya existe (company_id, name), lo omitimos
   for (const p of products) {
     const { data: existing, error: findError } = await supabase
       .from('products')
       .select('id')
-      .eq('user_id', userId)
+      .eq('company_id', companyId)
       .eq('name', p.name)
       .maybeSingle()
 
     if (findError) throw findError
     if (existing?.id) {
-      // eslint-disable-next-line no-console
       console.log(`OK (ya existe): ${p.name}`)
       continue
     }
 
     const { error: insertError } = await supabase.from('products').insert(p)
     if (insertError) throw insertError
-    // eslint-disable-next-line no-console
     console.log(`Creado: ${p.name}`)
   }
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error(err)
   process.exit(1)
 })

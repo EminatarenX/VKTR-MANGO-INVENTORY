@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '../supabase/db'
-import { getCurrentUserId } from '../supabase/auth'
+import { getCurrentCompanyId, getCurrentUserId } from '../supabase/auth'
 import { getCurrentInventory } from './inventory.service'
 import { getProductById } from './products.service'
 import type { MovementInput } from '../validators'
@@ -83,10 +83,12 @@ export async function createMovement(
 
   // Insert movement
   const userId = await getCurrentUserId()
+  const companyId = await getCurrentCompanyId()
 
   const { data, error } = await supabase
     .from('inventory_movements')
     .insert({
+      company_id: companyId,
       user_id: userId,
       productId: input.productId,
       type: input.type,
@@ -113,13 +115,13 @@ export async function createMovement(
 }
 
 /**
- * Get movements with optional filters (solo del usuario actual)
+ * Get movements with optional filters (solo de la empresa actual)
  */
 export async function getMovements(
   filters: MovementFilters = {}
 ): Promise<InventoryMovement[]> {
   const supabase = await getSupabaseClient()
-  const userId = await getCurrentUserId()
+  const companyId = await getCurrentCompanyId()
 
   const page = filters.page ?? 1
   const pageSize = filters.pageSize ?? 50
@@ -129,7 +131,7 @@ export async function getMovements(
   let query = supabase
     .from('inventory_movements')
     .select('*', { count: 'exact' })
-    .eq('user_id', userId)
+    .eq('company_id', companyId)
     .order('timestamp', { ascending: false })
     .order('createdAt', { ascending: false })
     .range(rangeFrom, rangeTo)
@@ -173,7 +175,7 @@ export async function getMovementsPage(
   filters: MovementFilters = {}
 ): Promise<MovementsPage> {
   const supabase = await getSupabaseClient()
-  const userId = await getCurrentUserId()
+  const companyId = await getCurrentCompanyId()
 
   const page = filters.page ?? 1
   const pageSize = filters.pageSize ?? 50
@@ -183,7 +185,7 @@ export async function getMovementsPage(
   let query = supabase
     .from('inventory_movements')
     .select('*', { count: 'exact' })
-    .eq('user_id', userId)
+    .eq('company_id', companyId)
     .order('timestamp', { ascending: false })
     .order('createdAt', { ascending: false })
     .range(rangeFrom, rangeTo)
@@ -230,17 +232,17 @@ export async function getMovementsByProduct(
 }
 
 /**
- * Delete a movement by id (solo si pertenece al usuario actual)
+ * Delete a movement by id (solo si pertenece a la empresa del usuario actual)
  */
 export async function deleteMovement(id: string): Promise<void> {
   const supabase = await getSupabaseClient()
-  const userId = await getCurrentUserId()
+  const companyId = await getCurrentCompanyId()
 
   const { error } = await supabase
     .from('inventory_movements')
     .delete()
     .eq('id', id)
-    .eq('user_id', userId)
+    .eq('company_id', companyId)
 
   if (error) {
     throw new Error(`Error al eliminar movimiento: ${error.message}`)

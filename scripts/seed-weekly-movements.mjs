@@ -24,7 +24,9 @@ function iso(date) {
 async function main() {
   const url = requireEnv('SUPABASE_URL')
   const serviceRoleKey = requireEnv('SUPABASE_SERVICE_ROLE_KEY')
-  const userId = requireEnv('SEED_USER_ID')
+  const companyId = requireEnv('SEED_COMPANY_ID')
+  // Opcional: si se pasa, queda como created_by en cada movimiento.
+  const userId = process.env.SEED_USER_ID || null
 
   const weeks = clamp(toInt(process.env.SEED_WEEKS, 26), 1, 260)
   const maxWeeklyIn = clamp(toInt(process.env.SEED_MAX_WEEKLY_IN, 60), 1, 500)
@@ -34,17 +36,17 @@ async function main() {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
-  // Productos del usuario
+  // Productos de la empresa
   const { data: products, error: productsError } = await supabase
     .from('products')
     .select('id, name, "avgKgPerCrate", "buyPricePerCrate", "sellPricePerCrate"')
-    .eq('user_id', userId)
+    .eq('company_id', companyId)
     .order('name')
 
   if (productsError) throw productsError
   if (!products?.length) {
     throw new Error(
-      'No hay productos para este usuario. Corre primero: npm run seed:products (o créalos en /settings).'
+      'No hay productos para esta empresa. Corre primero: npm run seed:products (o créalos en /settings).'
     )
   }
 
@@ -54,7 +56,7 @@ async function main() {
     const { data: last, error } = await supabase
       .from('inventory_movements')
       .select('"inventoryAfter", timestamp')
-      .eq('user_id', userId)
+      .eq('company_id', companyId)
       .eq('productId', p.id)
       .order('timestamp', { ascending: false })
       .order('createdAt', { ascending: false })
@@ -90,6 +92,7 @@ async function main() {
       if (inCrates > 0) {
         const inventoryAfter = current + inCrates
         const movement = {
+          company_id: companyId,
           user_id: userId,
           productId: p.id,
           type: 'IN',
@@ -120,6 +123,7 @@ async function main() {
         const buyTotal = outCrates * Number(p.buyPricePerCrate)
         const sellTotal = outCrates * Number(p.sellPricePerCrate)
         const movement = {
+          company_id: companyId,
           user_id: userId,
           productId: p.id,
           type: 'OUT',
@@ -146,12 +150,10 @@ async function main() {
     }
   }
 
-  // eslint-disable-next-line no-console
   console.log(`Listo. Movimientos insertados: ${inserted}`)
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error(err)
   process.exit(1)
 })
